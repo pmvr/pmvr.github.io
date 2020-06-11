@@ -1,4 +1,7 @@
-{% include lib/mathjax.html %}
+---
+layout: mathjax
+title: Information Leakage of EC-Nonces of Solo Security Keys
+---
 
 # Information Leakage of EC-Nonces of Solo Security Keys
 
