@@ -1,13 +1,15 @@
-# Abstract
+# Information Leakage of EC-Nonces of Solo Security Keys
+
+## Abstract
 It is shown that the implementation of ECDSA, which is fundamental for FIDO2 and U2F, leaks some information of the most significant bits of the secret ephemeral key by performing a simple power analysis (SPA). This information can be used for lattice based attacks to recover the private key. In addition, the implementation of the scalar point multiplication algorithm is not functional correct.
 
-# Experimental Setup
+## Experimental Setup
 
 A Solo USB-A for Hacker with firmware 3.0.0-3-g6b5d353 has been analyzed. The solo is operated by a Banana Pi Pro which sets an trigger signal on a GPIO Pin whenever a command is sent to the solo. The trigger signal as well as the USB current consumption is traced by a LeCroy HDO4000A oscilloscope.
 
 An additional command has been added to the solo firmware in `ctaphid.c` to directly execute `crypto_ecc256_compute_public_key` in `crpyto.c`, which executes `EccPoint_mult`, that is also executed by `uECC_sign_with_k`, see `uECC.c`.
 
-# Code Inspection
+## Code Inspection
 
 Though the implementation of the scalar elliptic point multiplication algorithm for ECDSA is timing invariant, it does not use a randomized \(z\)-coordinate of the elliptic curve points, which make it vulnerable against SPA. Line 1258 of uECC.c executes
 
@@ -15,29 +17,29 @@ Though the implementation of the scalar elliptic point multiplication algorithm 
 
 The 4th parameter is `initial_Z` which, if set to 0, sets the \(z\)-coordinate to 1 when line 874 executes `XYcZ_initial_double`. Since the ephemeral key is processed bitwise, two elliptic curve point multiplications with the same sequence of leading bits lead to the same computations on the device, which generates similar power consumption traces.
 
-# Experimental Results
+## Experimental Results
 
 In total 256000 scalar point multiplications have been recorded, 1000 for each of the 8 most significant bits of the scalar (0-255). Figure [\[fig:Power-Consumption-Trace\]](#fig:Power-Consumption-Trace) shows a power consumption trace of a complete scalar point multiplication. Obviously, the power consumption rises, if the device starts processing the input.
 
-![<span id="fig:Power-Consumption-Trace" label="fig:Power-Consumption-Trace">\[fig:Power-Consumption-Trace\]</span>Power Consumption Trace](Messungen/powertrace)
+![<span id="fig:Power-Consumption-Trace" label="fig:Power-Consumption-Trace">\[fig:Power-Consumption-Trace\]</span>Power Consumption Trace](figures/powertrace.png)
 
 Since the trigger signal is not provided by the solo and the communication over USB is not time invariant the start of the processing of the command on the solo jitters relative to the trigger signal. Figure [\[fig:Histogram-of-Offsets\]](#fig:Histogram-of-Offsets) shows the distribution of the offsets for the start of the command processing.
 
-![<span id="fig:Histogram-of-Offsets" label="fig:Histogram-of-Offsets">\[fig:Histogram-of-Offsets\]</span>Histogram of Offsets](Messungen/Statistiken/jitter_histogram)
+![<span id="fig:Histogram-of-Offsets" label="fig:Histogram-of-Offsets">\[fig:Histogram-of-Offsets\]</span>Histogram of Offsets](figures/jitter_histogram.png)
 
 Although the data is very noisy, it was possible to properly align the traces. By comparing the differences in averaged traces for different sets of the \(n\) most significant bits, it was possible to identify the points in time where the \(n\) most significant bits are processed by the solo. Figure [\[fig:Difference-Plot-of\]](#fig:Difference-Plot-of) shows the difference of averaged traces, where the traces with the 4 most significant bits equal to 0 are subtracted from those averaged traces where the 4 bits are equal to 1 and 15 respectively. With average traces the classification could be visually done.
 
-![<span id="fig:Difference-Plot-of" label="fig:Difference-Plot-of">\[fig:Difference-Plot-of\]</span>Section of a Difference Plot of Averaged Traces](Messungen/average_difference_nibble)
+![<span id="fig:Difference-Plot-of" label="fig:Difference-Plot-of">\[fig:Difference-Plot-of\]</span>Section of a Difference Plot of Averaged Traces](figures/average_difference_nibble.png)
 
 In order to classify a trace according to the \(n\) most significant bits, 80% of the traces have been labeled and have been used to train a machine learning algorithm and 20% of the unlabeled traces have been used to evaluate the classifier. It turned out that random forest classifier performed well.
 
 For a classifier there are two important performance measures. One is called precision, which is the ratio of true positives (tp) and the sum of true positives and false positives (fp). The other one is called recall, which is the ratio of true positives and the sum of true positives and false negatives (fn): \[\text{precision}=\frac{\text{tp}}{\text{tp}+\text{fp}},\quad\text{recall}=\frac{\text{tp}}{\text{tp}+\text{fn}}\] A binary classifier uses a threshold to assign the input to a class. Thus, varying the threshold enables a trade-off between the precision and recall, i.e. increasing precision reduces recall, and vice versa. Figure [\[fig:Precision-Recall-Trade-Off\]](#fig:Precision-Recall-Trade-Off) plots the precision and recall against the thresholds of a binary classifier that decides if the 4 most significant bits are equal to 0100 or not.
 
-![<span id="fig:Precision-Recall-Trade-Off" label="fig:Precision-Recall-Trade-Off">\[fig:Precision-Recall-Trade-Off\]</span>Precision-Recall-Trade-Off](Messungen/Statistiken/prescicion-recall-4Bit-04)
+![<span id="fig:Precision-Recall-Trade-Off" label="fig:Precision-Recall-Trade-Off">\[fig:Precision-Recall-Trade-Off\]</span>Precision-Recall-Trade-Off](figures/prescicion-recall-4Bit-04.png)
 
 The threshold can be chosen, such that the precision is fixed to 95%. Figure [\[fig:Recall-given-Precision\]](#fig:Recall-given-Precision) shows the recall of binary classifiers for the first 4, 5, 6, and 7 most significant bits, when the precision is set to 95%. It turned out, that the classification performance depends on the bit patterns and drops, if the number of the most significant bits to be classified increases. For a binary 8-bit classifier a precision of 95% could not achieved.
 
-![<span id="fig:Recall-given-Precision" label="fig:Recall-given-Precision">\[fig:Recall-given-Precision\]</span>Recall given Precision = 95%](Messungen/Statistiken/recall_given_precision)
+![<span id="fig:Recall-given-Precision" label="fig:Recall-given-Precision">\[fig:Recall-given-Precision\]</span>Recall given Precision = 95%](figures/recall_given_precision)
 
 For example, the binary 4-bit classifier with a precision \(p=0.95\) has a recall of \(r=0.946\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then \[\frac{16}{r}\cdot\frac{80}{p^{80}}\approx82000\]
 
@@ -53,7 +55,7 @@ Random forest classifiers can also be used as multiclass classifiers. Then each 
 
 <span id="tab:Performance-of-the" label="tab:Performance-of-the">\[tab:Performance-of-the\]</span>Performance of the Multiclass Classifiers
 
-# Countermeasures
+## Countermeasures
 
 A countermeasure has to prevent information leakage about the ephemeral key.
 
@@ -65,13 +67,13 @@ Here, \(m\) is the order of the elliptic curve. This measurement would of course
 
 Another approach to mitigate information leakage is to randomly add dummy instructions to misalign the traces.
 
-# Conclusion
+## Conclusion
 
 Obviously, the results show evidence that information about the most significant bits of a ephemeral key is leaking from the power trace.
 
 Although an attack seems unrealistic, because of the time required to collect all the signatures and the fact that FIDO2 and U2F requires user interaction, the implementation shall be considered as vulnerable. Attacks are always improving, they are not getting worse if time passes by. In particular, it might be possible to improve the measurement setup such that the noise in the data is reduced or to improve the post-processing of the data. Furthermore, machine learning algorithms allow a lot of tweaking with their parameters or a chaining of different classifiers will provide better results.
 
-# Additional Observations
+## Additional Observations
 
 The algorithm, that is implemented in `uECC_compute_public_key`, is a Montgomery ladder with \((X,Y)\)-only co-\(Z\) addition. It breaks when the point at infinity is reached. Since the ephemeral key \(k\) is regularized to achieve a constant timing, the algorithm breaks when the ephemeral key is 1, \(m-1\) or \(m-2\), where \(m\) is the order of the elliptic curve secp256r1. Thus, the implementation is functionally incorrect. On one hand, if the scalar is derived by a correctly operating true random number generator, the chance that \(k\)is either 1, \(m-1\) or \(m-2\) is negligible, it will simply not happen. On the other hand, if the scalar is received from outside by a third party an error state can be provoked, which might generate a security issue in the context of an application.
 
