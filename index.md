@@ -47,7 +47,10 @@ Although the data is very noisy, it was possible to properly align the traces. B
 
 In order to classify a trace according to the \(n\) most significant bits, 80% of the traces have been labeled and have been used to train a machine learning algorithm and 20% of the unlabeled traces have been used to evaluate the classifier. It turned out that random forest classifier performed well.
 
-For a classifier there are two important performance measures. One is called precision, which is the ratio of true positives (tp) and the sum of true positives and false positives (fp). The other one is called recall, which is the ratio of true positives and the sum of true positives and false negatives (fn): $$\text{precision}=\frac{\text{tp}}{\text{tp}+\text{fp}},\quad\text{recall}=\frac{\text{tp}}{\text{tp}+\text{fn}}$$
+For a classifier there are two important performance measures. One is called precision, which is the ratio of true positives (tp) and the sum of true positives and false positives (fp). The other one is called recall, which is the ratio of true positives and the sum of true positives and false negatives (fn):
+
+$$\text{precision}=\frac{\text{tp}}{\text{tp}+\text{fp}},\quad\text{recall}=\frac{\text{tp}}{\text{tp}+\text{fn}}$$
+
 A binary classifier uses a threshold to assign the input to a class. Thus, varying the threshold enables a trade-off between the precision and recall, i.e. increasing precision reduces recall, and vice versa. Figure [\[fig:Precision-Recall-Trade-Off\]](#fig:Precision-Recall-Trade-Off) plots the precision and recall against the thresholds of a binary classifier that decides if the 4 most significant bits are equal to 0100 or not.
 
 ![<span id="fig:Precision-Recall-Trade-Off" label="fig:Precision-Recall-Trade-Off">\[fig:Precision-Recall-Trade-Off\]</span>Precision-Recall-Trade-Off](figures/prescicion-recall-4Bit-04.png)
@@ -56,9 +59,13 @@ The threshold can be chosen, such that the precision is fixed to 95%. Figure [\[
 
 ![<span id="fig:Recall-given-Precision" label="fig:Recall-given-Precision">\[fig:Recall-given-Precision\]</span>Recall given Precision = 95%](figures/recall_given_precision.png)
 
-For example, the binary 4-bit classifier with a precision \(p=0.95\) has a recall of \(r=0.946\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then $$\frac{16}{r}\cdot\frac{80}{p^{80}}\approx 82000$$
+For example, the binary 4-bit classifier with a precision \(p=0.95\) has a recall of \(r=0.946\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then
 
-For a 7-bit classifier with a precision of \(p=0.95\) and recall of \(r\approx0.4\) one can estimate $$\frac{128}{r}\cdot\frac{50}{p^{50}}\approx200000$$
+$$\frac{16}{r}\cdot\frac{80}{p^{80}}\approx 82000$$
+
+For a 7-bit classifier with a precision of \(p=0.95\) and recall of \(r\approx0.4\) one can estimate
+
+$$\frac{128}{r}\cdot\frac{50}{p^{50}}\approx200000$$
 
 signature generations, where the lattice attack then requires a dimension of about 50.
 
@@ -77,6 +84,7 @@ A countermeasure has to prevent information leakage about the ephemeral key.
 A simple countermeasure is to add randomization to the initial \(z\)-coordinate of the basepoint. If effective, it would even not cost that much performance.
 
 Alternatively, an effective but more expensive countermeasure against information leakage of the ephemeral key is blinding \(k\) with a 32 bit random number \(r\):
+
 $$r\cdot m+k$$
 
 Here, \(m\) is the order of the elliptic curve. This measurement would of course increase the running time of the scalar point multiplication by 12.5% for a 256-bit elliptic curve.
@@ -91,7 +99,7 @@ Although an attack seems unrealistic, because of the time required to collect al
 
 ## Additional Observations
 
-The algorithm, that is implemented in `uECC_compute_public_key`, is a Montgomery ladder with \((X,Y)\)-only co-\(Z\) addition. It breaks when the point at infinity is reached. Since the ephemeral key \(k\) is regularized to achieve a constant timing, the algorithm breaks when the ephemeral key is 1, \(m-1\) or \(m-2\), where \(m\) is the order of the elliptic curve secp256r1. Thus, the implementation is functionally incorrect. On one hand, if the scalar is derived by a correctly operating true random number generator, the chance that \(k\)is either 1, \(m-1\) or \(m-2\) is negligible, it will simply not happen. On the other hand, if the scalar is received from outside by a third party an error state can be provoked, which might generate a security issue in the context of an application.
+The algorithm, that is implemented in `uECC_compute_public_key`, is a Montgomery ladder with \\((X,Y)\\)-only co-\\(Z\\) addition. It breaks when the point at infinity is reached. Since the ephemeral key \(k\) is regularized to achieve a constant timing, the algorithm breaks when the ephemeral key is 1, \(m-1\) or \(m-2\), where \(m\) is the order of the elliptic curve secp256r1. Thus, the implementation is functionally incorrect. On one hand, if the scalar is derived by a correctly operating true random number generator, the chance that \(k\)is either 1, \(m-1\) or \(m-2\) is negligible, it will simply not happen. On the other hand, if the scalar is received from outside by a third party an error state can be provoked, which might generate a security issue in the context of an application.
 
 However, without the regularization as a countermeasure against timing attacks, the algorithm would treat a scalar of 1 as one of 3. That is because the original algorithm of the cited paper\[1\] is incorrect for this case.
 
