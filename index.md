@@ -1,5 +1,5 @@
 ---
-layout: mathjax
+layout: default
 title: Information Leakage of EC-Nonces of Solo Security Keys
 ---
 
