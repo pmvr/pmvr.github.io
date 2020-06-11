@@ -25,11 +25,11 @@ Solokeys uses an external library for elliptic curve cryptography: [micro-ecc](h
 
 ## Code Inspection
 
-Though the implementation of the scalar elliptic point multiplication algorithm for ECDSA is timing invariant, it does not use a randomized \(z\)-coordinate of the elliptic curve points, which make it vulnerable against SPA. Line 1258 of uECC.c executes
+Though the implementation of the scalar elliptic point multiplication algorithm for ECDSA is timing invariant, it does not use a randomized \\(z\\)-coordinate of the elliptic curve points, which make it vulnerable against SPA. Line 1258 of uECC.c executes
 
 > `EccPoint_mult(p, curve->G, k2[!carry], 0, num_n_bits + 1, curve);`
 
-The 4th parameter is `initial_Z` which, if set to 0, sets the \(z\)-coordinate to 1 when line 874 executes `XYcZ_initial_double`. Since the ephemeral key is processed bitwise, two elliptic curve point multiplications with the same sequence of leading bits lead to the same computations on the device, which generates similar power consumption traces.
+The 4th parameter is `initial_Z` which, if set to 0, sets the \\(z\\)-coordinate to 1 when line 874 executes `XYcZ_initial_double`. Since the ephemeral key is processed bitwise, two elliptic curve point multiplications with the same sequence of leading bits lead to the same computations on the device, which generates similar power consumption traces.
 
 ## Experimental Results
 
@@ -41,11 +41,11 @@ Since the trigger signal is not provided by the solo and the communication over 
 
 ![<span id="fig:Histogram-of-Offsets" label="fig:Histogram-of-Offsets">\[fig:Histogram-of-Offsets\]</span>Histogram of Offsets](figures/jitter_histogram.png)
 
-Although the data is very noisy, it was possible to properly align the traces. By comparing the differences in averaged traces for different sets of the \(n\) most significant bits, it was possible to identify the points in time where the \(n\) most significant bits are processed by the solo. Figure [\[fig:Difference-Plot-of\]](#fig:Difference-Plot-of) shows the difference of averaged traces, where the traces with the 4 most significant bits equal to 0 are subtracted from those averaged traces where the 4 bits are equal to 1 and 15 respectively. With average traces the classification could be visually done.
+Although the data is very noisy, it was possible to properly align the traces. By comparing the differences in averaged traces for different sets of the \\(n\\) most significant bits, it was possible to identify the points in time where the \\(n\\) most significant bits are processed by the solo. Figure [\[fig:Difference-Plot-of\]](#fig:Difference-Plot-of) shows the difference of averaged traces, where the traces with the 4 most significant bits equal to 0 are subtracted from those averaged traces where the 4 bits are equal to 1 and 15 respectively. With average traces the classification could be visually done.
 
 ![<span id="fig:Difference-Plot-of" label="fig:Difference-Plot-of">\[fig:Difference-Plot-of\]</span>Section of a Difference Plot of Averaged Traces](figures/average_difference_nibble.png)
 
-In order to classify a trace according to the \(n\) most significant bits, 80% of the traces have been labeled and have been used to train a machine learning algorithm and 20% of the unlabeled traces have been used to evaluate the classifier. It turned out that random forest classifier performed well.
+In order to classify a trace according to the \\(n\\) most significant bits, 80% of the traces have been labeled and have been used to train a machine learning algorithm and 20% of the unlabeled traces have been used to evaluate the classifier. It turned out that random forest classifier performed well.
 
 For a classifier there are two important performance measures. One is called precision, which is the ratio of true positives (tp) and the sum of true positives and false positives (fp). The other one is called recall, which is the ratio of true positives and the sum of true positives and false negatives (fn):
 
@@ -59,17 +59,17 @@ The threshold can be chosen, such that the precision is fixed to 95%. Figure [\[
 
 ![<span id="fig:Recall-given-Precision" label="fig:Recall-given-Precision">\[fig:Recall-given-Precision\]</span>Recall given Precision = 95%](figures/recall_given_precision.png)
 
-For example, the binary 4-bit classifier with a precision \(p=0.95\) has a recall of \(r=0.946\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then
+For example, the binary 4-bit classifier with a precision \\(p=0.95\\) has a recall of \\(r=0.946\\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then
 
 $$\frac{16}{r}\cdot\frac{80}{p^{80}}\approx 82000$$
 
-For a 7-bit classifier with a precision of \(p=0.95\) and recall of \(r\approx0.4\) one can estimate
+For a 7-bit classifier with a precision of \\(p=0.95\\) and recall of \\(r\approx0.4\\) one can estimate
 
 $$\frac{128}{r}\cdot\frac{50}{p^{50}}\approx200000$$
 
 signature generations, where the lattice attack then requires a dimension of about 50.
 
-Random forest classifiers can also be used as multiclass classifiers. Then each trace is labeled as one of \(2^{n}\) classes for a \(n\)-bit classifier. The results are shown in table [\[tab:Performance-of-the\]](#tab:Performance-of-the). Precision and recall are the same.
+Random forest classifiers can also be used as multiclass classifiers. Then each trace is labeled as one of \\(2^{n}\\) classes for a \\(n\\)-bit classifier. The results are shown in table [\[tab:Performance-of-the\]](#tab:Performance-of-the). Precision and recall are the same.
 
 | performance/bits |   4   |   5   |   6   |   7   |   8   |
 | :--------------: | :---: | :---: | :---: | :---: | :---: |
@@ -81,13 +81,13 @@ Random forest classifiers can also be used as multiclass classifiers. Then each 
 
 A countermeasure has to prevent information leakage about the ephemeral key.
 
-A simple countermeasure is to add randomization to the initial \(z\)-coordinate of the basepoint. If effective, it would even not cost that much performance.
+A simple countermeasure is to add randomization to the initial \\(z\\)-coordinate of the basepoint. If effective, it would even not cost that much performance.
 
-Alternatively, an effective but more expensive countermeasure against information leakage of the ephemeral key is blinding \(k\) with a 32 bit random number \(r\):
+Alternatively, an effective but more expensive countermeasure against information leakage of the ephemeral key is blinding \\(k\\) with a 32 bit random number \\(r\\):
 
 $$r\cdot m+k$$
 
-Here, \(m\) is the order of the elliptic curve. This measurement would of course increase the running time of the scalar point multiplication by 12.5% for a 256-bit elliptic curve.
+Here, \\(m\\) is the order of the elliptic curve. This measurement would of course increase the running time of the scalar point multiplication by 12.5% for a 256-bit elliptic curve.
 
 Another approach to mitigate information leakage is to randomly add dummy instructions to misalign the traces.
 
@@ -99,7 +99,7 @@ Although an attack seems unrealistic, because of the time required to collect al
 
 ## Additional Observations
 
-The algorithm, that is implemented in `uECC_compute_public_key`, is a Montgomery ladder with \\((X,Y)\\)-only co-\\(Z\\) addition. It breaks when the point at infinity is reached. Since the ephemeral key \(k\) is regularized to achieve a constant timing, the algorithm breaks when the ephemeral key is 1, \(m-1\) or \(m-2\), where \(m\) is the order of the elliptic curve secp256r1. Thus, the implementation is functionally incorrect. On one hand, if the scalar is derived by a correctly operating true random number generator, the chance that \(k\)is either 1, \(m-1\) or \(m-2\) is negligible, it will simply not happen. On the other hand, if the scalar is received from outside by a third party an error state can be provoked, which might generate a security issue in the context of an application.
+The algorithm, that is implemented in `uECC_compute_public_key`, is a Montgomery ladder with \\((X,Y)\\)-only co-\\(Z\\) addition. It breaks when the point at infinity is reached. Since the ephemeral key \\(k\\) is regularized to achieve a constant timing, the algorithm breaks when the ephemeral key is 1, \\(m-1\\) or \\(m-2\\), where \\(m\\) is the order of the elliptic curve secp256r1. Thus, the implementation is functionally incorrect. On one hand, if the scalar is derived by a correctly operating true random number generator, the chance that \\(k\\)is either 1, \\(m-1\\) or \\(m-2\\) is negligible, it will simply not happen. On the other hand, if the scalar is received from outside by a third party an error state can be provoked, which might generate a security issue in the context of an application.
 
 However, without the regularization as a countermeasure against timing attacks, the algorithm would treat a scalar of 1 as one of 3. That is because the original algorithm of the cited paper\[1\] is incorrect for this case.
 
