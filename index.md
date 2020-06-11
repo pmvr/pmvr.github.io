@@ -3,19 +3,17 @@ layout: default
 title: Information Leakage of EC-Nonces of Solo Security Keys
 ---
 
-# Information Leakage of EC-Nonces of Solo Security Keys
-
 Author: **Matthias Vögeler**
 
-matthias.voegeler@hshl.de
+<matthias.voegeler@hshl.de>
 
-## Preliminary Remarks
+# Preliminary Remarks
 The following results have been filed to Solokey in January 2020 and have been accepted.
 
-## Abstract
+# Abstract
 It is shown that the implementation of ECDSA, which is fundamental for FIDO2 and U2F, leaks some information of the most significant bits of the secret ephemeral key by performing a simple power analysis (SPA). This information can be used for lattice based attacks to recover the private key. In addition, the implementation of the scalar point multiplication algorithm is not functional correct.
 
-## Experimental Setup
+# Experimental Setup
 
 A [Solo USB-A for Hacker](https://solokeys.com/products/solo-hacker) with firmware 3.0.0-3-g6b5d353 has been analyzed. The solo is operated by a Banana Pi Pro which sets an trigger signal on a GPIO Pin whenever a command is sent to the solo. The trigger signal as well as the USB current consumption is traced by a LeCroy HDO4000A oscilloscope.
 
@@ -23,23 +21,23 @@ An additional command has been added to the solo firmware in `ctaphid.c` to dire
 
 Solokeys uses an external library for elliptic curve cryptography: [micro-ecc](https://github.com/kmackay/micro-ecc). So the findings are potentially as well valid for other products that are using this library.
 
-## Code Inspection
+# Code Inspection
 
-Though the implementation of the scalar elliptic point multiplication algorithm for ECDSA is timing invariant, it does not use a randomized \\(z\\)-coordinate of the elliptic curve points, which make it vulnerable against SPA. Line 1258 of uECC.c executes
+Though the implementation of the scalar elliptic point multiplication algorithm for ECDSA is timing invariant, it does not use a randomized \\(z\\)-coordinate of the elliptic curve points, which make it vulnerable against SPA. Line 1258 of `uECC.c` executes
 
 > `EccPoint_mult(p, curve->G, k2[!carry], 0, num_n_bits + 1, curve);`
 
 The 4th parameter is `initial_Z` which, if set to 0, sets the \\(z\\)-coordinate to 1 when line 874 executes `XYcZ_initial_double`. Since the ephemeral key is processed bitwise, two elliptic curve point multiplications with the same sequence of leading bits lead to the same computations on the device, which generates similar power consumption traces.
 
-## Experimental Results
+# Experimental Results
 
-In total 256000 scalar point multiplications have been recorded, 1000 for each of the 8 most significant bits of the scalar (0-255). Figure [\[fig:Power-Consumption-Trace\]](#fig:Power-Consumption-Trace) shows a power consumption trace of a complete scalar point multiplication. Obviously, the power consumption rises, if the device starts processing the input.
+In total 256000 scalar point multiplications have been recorded, 1000 for each of the 8 most significant bits of the scalar (0-255). Figure 1 shows a power consumption trace of a complete scalar point multiplication. Obviously, the power consumption rises, if the device starts processing the input.
 
-![<span id="fig:Power-Consumption-Trace" label="fig:Power-Consumption-Trace">\[fig:Power-Consumption-Trace\]</span>Power Consumption Trace](figures/powertrace.png)
+{% include image.html url="figures/powertrace.png" description="Figure 1: Power Consumption Trace" %}
 
 Since the trigger signal is not provided by the solo and the communication over USB is not time invariant the start of the processing of the command on the solo jitters relative to the trigger signal. Figure [\[fig:Histogram-of-Offsets\]](#fig:Histogram-of-Offsets) shows the distribution of the offsets for the start of the command processing.
 
-![<span id="fig:Histogram-of-Offsets" label="fig:Histogram-of-Offsets">\[fig:Histogram-of-Offsets\]</span>Histogram of Offsets](figures/jitter_histogram.png)
+{% include image.html url="figures/jitter_histogram.png" description="Figure 2: Histogram of Offsets" %}
 
 Although the data is very noisy, it was possible to properly align the traces. By comparing the differences in averaged traces for different sets of the \\(n\\) most significant bits, it was possible to identify the points in time where the \\(n\\) most significant bits are processed by the solo. Figure [\[fig:Difference-Plot-of\]](#fig:Difference-Plot-of) shows the difference of averaged traces, where the traces with the 4 most significant bits equal to 0 are subtracted from those averaged traces where the 4 bits are equal to 1 and 15 respectively. With average traces the classification could be visually done.
 
@@ -77,7 +75,7 @@ Random forest classifiers can also be used as multiclass classifiers. Then each 
 
 <span id="tab:Performance-of-the" label="tab:Performance-of-the">\[tab:Performance-of-the\]</span>Performance of the Multiclass Classifiers
 
-## Countermeasures
+# Countermeasures
 
 A countermeasure has to prevent information leakage about the ephemeral key.
 
@@ -91,16 +89,14 @@ Here, \\(m\\) is the order of the elliptic curve. This measurement would of cour
 
 Another approach to mitigate information leakage is to randomly add dummy instructions to misalign the traces.
 
-## Conclusion
+# Conclusion
 
 Obviously, the results show evidence that information about the most significant bits of a ephemeral key is leaking from the power trace.
 
 Although an attack seems unrealistic, because of the time required to collect all the signatures and the fact that FIDO2 and U2F requires user interaction, the implementation shall be considered as vulnerable. Attacks are always improving, they are not getting worse if time passes by. In particular, it might be possible to improve the measurement setup such that the noise in the data is reduced or to improve the post-processing of the data. Furthermore, machine learning algorithms allow a lot of tweaking with their parameters or a chaining of different classifiers will provide better results.
 
-## Additional Observations
+# Additional Observations
 
 The algorithm, that is implemented in `uECC_compute_public_key`, is a Montgomery ladder with \\((X,Y)\\)-only co-\\(Z\\) addition. It breaks when the point at infinity is reached. Since the ephemeral key \\(k\\) is regularized to achieve a constant timing, the algorithm breaks when the ephemeral key is 1, \\(m-1\\) or \\(m-2\\), where \\(m\\) is the order of the elliptic curve secp256r1. Thus, the implementation is functionally incorrect. On one hand, if the scalar is derived by a correctly operating true random number generator, the chance that \\(k\\)is either 1, \\(m-1\\) or \\(m-2\\) is negligible, it will simply not happen. On the other hand, if the scalar is received from outside by a third party an error state can be provoked, which might generate a security issue in the context of an application.
 
-However, without the regularization as a countermeasure against timing attacks, the algorithm would treat a scalar of 1 as one of 3. That is because the original algorithm of the cited paper\[1\] is incorrect for this case.
-
-1.  Algorithm 9 in http://eprint.iacr.org/2011/338.pdf
+However, without the regularization as a countermeasure against timing attacks, the algorithm would treat a scalar of 1 as one of 3. That is because the original algorithm 9 of the cited [paper](http://eprint.iacr.org/2011/338.pdf) is incorrect for this case.
