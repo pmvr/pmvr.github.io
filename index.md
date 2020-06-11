@@ -1,4 +1,6 @@
-Hallo Welt!
+# Abstract
+It is shown that the implementation of ECDSA, which is fundamental for FIDO2 and U2F, leaks some information of the most significant bits of the secret ephemeral key by performing a simple power analysis (SPA). This information can be used for lattice based attacks to recover the private key. In addition, the implementation of the scalar point multiplication algorithm is not functional correct.
+
 # Experimental Setup
 
 A Solo USB-A for Hacker with firmware 3.0.0-3-g6b5d353 has been analyzed. The solo is operated by a Banana Pi Pro which sets an trigger signal on a GPIO Pin whenever a command is sent to the solo. The trigger signal as well as the USB current consumption is traced by a LeCroy HDO4000A oscilloscope.
