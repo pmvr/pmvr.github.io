@@ -1,13 +1,24 @@
+{% include lib/mathjax.html %}
+
 # Information Leakage of EC-Nonces of Solo Security Keys
+
+Author: **Matthias Vögeler**
+
+matthias.voegeler@hshl.de
+
+## Preliminary Remarks
+The following results have been filed to Solokey in January 2020 and have been accepted.
 
 ## Abstract
 It is shown that the implementation of ECDSA, which is fundamental for FIDO2 and U2F, leaks some information of the most significant bits of the secret ephemeral key by performing a simple power analysis (SPA). This information can be used for lattice based attacks to recover the private key. In addition, the implementation of the scalar point multiplication algorithm is not functional correct.
 
 ## Experimental Setup
 
-A Solo USB-A for Hacker with firmware 3.0.0-3-g6b5d353 has been analyzed. The solo is operated by a Banana Pi Pro which sets an trigger signal on a GPIO Pin whenever a command is sent to the solo. The trigger signal as well as the USB current consumption is traced by a LeCroy HDO4000A oscilloscope.
+A [Solo USB-A for Hacker](https://solokeys.com/products/solo-hacker) with firmware 3.0.0-3-g6b5d353 has been analyzed. The solo is operated by a Banana Pi Pro which sets an trigger signal on a GPIO Pin whenever a command is sent to the solo. The trigger signal as well as the USB current consumption is traced by a LeCroy HDO4000A oscilloscope.
 
 An additional command has been added to the solo firmware in `ctaphid.c` to directly execute `crypto_ecc256_compute_public_key` in `crpyto.c`, which executes `EccPoint_mult`, that is also executed by `uECC_sign_with_k`, see `uECC.c`.
+
+Solokeys uses an external library for elliptic curve cryptography: [micro-ecc](https://github.com/kmackay/micro-ecc). So the findings are potentially as well valid for other products that are using this library.
 
 ## Code Inspection
 
@@ -39,9 +50,9 @@ For a classifier there are two important performance measures. One is called pre
 
 The threshold can be chosen, such that the precision is fixed to 95%. Figure [\[fig:Recall-given-Precision\]](#fig:Recall-given-Precision) shows the recall of binary classifiers for the first 4, 5, 6, and 7 most significant bits, when the precision is set to 95%. It turned out, that the classification performance depends on the bit patterns and drops, if the number of the most significant bits to be classified increases. For a binary 8-bit classifier a precision of 95% could not achieved.
 
-![<span id="fig:Recall-given-Precision" label="fig:Recall-given-Precision">\[fig:Recall-given-Precision\]</span>Recall given Precision = 95%](figures/recall_given_precision)
+![<span id="fig:Recall-given-Precision" label="fig:Recall-given-Precision">\[fig:Recall-given-Precision\]</span>Recall given Precision = 95%](figures/recall_given_precision.png)
 
-For example, the binary 4-bit classifier with a precision \(p=0.95\) has a recall of \(r=0.946\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then \[\frac{16}{r}\cdot\frac{80}{p^{80}}\approx82000\]
+For example, the binary 4-bit classifier with a precision \(p=0.95\) has a recall of \(r=0.946\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then \[\frac{16}{r}\cdot\frac{80}{p^{80}}\approx 82000\]
 
 For a 7-bit classifier with a precision of \(p=0.95\) and recall of \(r\approx0.4\) one can estimate \[\frac{128}{r}\cdot\frac{50}{p^{50}}\approx200000\]
 
