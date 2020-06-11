@@ -8,7 +8,7 @@ Author: **Matthias Vögeler**
 <matthias.voegeler@hshl.de>
 
 # Preliminary Remarks
-The following results have been filed to Solokey in January 2020 and have been accepted.
+The following results have been filed to [Solokeys](https://solokeys.com/) in January 2020 and have been accepted.
 
 # Abstract
 It is shown that the implementation of ECDSA, which is fundamental for FIDO2 and U2F, leaks some information of the most significant bits of the secret ephemeral key by performing a simple power analysis (SPA). This information can be used for lattice based attacks to recover the private key. In addition, the implementation of the scalar point multiplication algorithm is not functional correct.
@@ -39,9 +39,9 @@ Since the trigger signal is not provided by the solo and the communication over 
 
 {% include image.html url="figures/jitter_histogram.png" description="Figure 2: Histogram of Offsets" %}
 
-Although the data is very noisy, it was possible to properly align the traces. By comparing the differences in averaged traces for different sets of the \\(n\\) most significant bits, it was possible to identify the points in time where the \\(n\\) most significant bits are processed by the solo. Figure [\[fig:Difference-Plot-of\]](#fig:Difference-Plot-of) shows the difference of averaged traces, where the traces with the 4 most significant bits equal to 0 are subtracted from those averaged traces where the 4 bits are equal to 1 and 15 respectively. With average traces the classification could be visually done.
+Although the data is very noisy, it was possible to properly align the traces. By comparing the differences in averaged traces for different sets of the \\(n\\) most significant bits, it was possible to identify the points in time where the \\(n\\) most significant bits are processed by the solo. Figure 3 shows the difference of averaged traces, where the traces with the 4 most significant bits equal to 0 are subtracted from those averaged traces where the 4 bits are equal to 1 and 15 respectively. With average traces the classification could be visually done.
 
-![<span id="fig:Difference-Plot-of" label="fig:Difference-Plot-of">\[fig:Difference-Plot-of\]</span>Section of a Difference Plot of Averaged Traces](figures/average_difference_nibble.png)
+{% include image.html url="figures/average_difference_nibble.png" description="Figure 3: Section of a Difference Plot of Averaged Traces" %}
 
 In order to classify a trace according to the \\(n\\) most significant bits, 80% of the traces have been labeled and have been used to train a machine learning algorithm and 20% of the unlabeled traces have been used to evaluate the classifier. It turned out that random forest classifier performed well.
 
@@ -49,13 +49,13 @@ For a classifier there are two important performance measures. One is called pre
 
 $$\text{precision}=\frac{\text{tp}}{\text{tp}+\text{fp}},\quad\text{recall}=\frac{\text{tp}}{\text{tp}+\text{fn}}$$
 
-A binary classifier uses a threshold to assign the input to a class. Thus, varying the threshold enables a trade-off between the precision and recall, i.e. increasing precision reduces recall, and vice versa. Figure [\[fig:Precision-Recall-Trade-Off\]](#fig:Precision-Recall-Trade-Off) plots the precision and recall against the thresholds of a binary classifier that decides if the 4 most significant bits are equal to 0100 or not.
+A binary classifier uses a threshold to assign the input to a class. Thus, varying the threshold enables a trade-off between the precision and recall, i.e. increasing precision reduces recall, and vice versa. Figure 4 plots the precision and recall against the thresholds of a binary classifier that decides if the 4 most significant bits are equal to 0100 or not.
 
-![<span id="fig:Precision-Recall-Trade-Off" label="fig:Precision-Recall-Trade-Off">\[fig:Precision-Recall-Trade-Off\]</span>Precision-Recall-Trade-Off](figures/prescicion-recall-4Bit-04.png)
+{% include image.html url="figures/prescicion-recall-4Bit-04.png" description="Figure 4: Precision-Recall-Trade-Off" %}
 
-The threshold can be chosen, such that the precision is fixed to 95%. Figure [\[fig:Recall-given-Precision\]](#fig:Recall-given-Precision) shows the recall of binary classifiers for the first 4, 5, 6, and 7 most significant bits, when the precision is set to 95%. It turned out, that the classification performance depends on the bit patterns and drops, if the number of the most significant bits to be classified increases. For a binary 8-bit classifier a precision of 95% could not achieved.
+The threshold can be chosen, such that the precision is fixed to 95%. Figure 5 shows the recall of binary classifiers for the first 4, 5, 6, and 7 most significant bits, when the precision is set to 95%. It turned out, that the classification performance depends on the bit patterns and drops, if the number of the most significant bits to be classified increases. For a binary 8-bit classifier a precision of 95% could not achieved.
 
-![<span id="fig:Recall-given-Precision" label="fig:Recall-given-Precision">\[fig:Recall-given-Precision\]</span>Recall given Precision = 95%](figures/recall_given_precision.png)
+{% include image.html url="figures/recall_given_precision.png" description="Figure 5: Recall given Precision = 95%" %}
 
 For example, the binary 4-bit classifier with a precision \\(p=0.95\\) has a recall of \\(r=0.946\\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then
 
