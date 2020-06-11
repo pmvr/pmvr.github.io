@@ -1,5 +1,5 @@
 ---
-usemathjax: true
+layout: mathjax
 title: Information Leakage of EC-Nonces of Solo Security Keys
 ---
 
@@ -56,9 +56,9 @@ The threshold can be chosen, such that the precision is fixed to 95%. Figure [\[
 
 ![<span id="fig:Recall-given-Precision" label="fig:Recall-given-Precision">\[fig:Recall-given-Precision\]</span>Recall given Precision = 95%](figures/recall_given_precision.png)
 
-For example, the binary 4-bit classifier with a precision \(p=0.95\) has a recall of \(r=0.946\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then \[\frac{16}{r}\cdot\frac{80}{p^{80}}\approx 82000\]
+For example, the binary 4-bit classifier with a precision \(p=0.95\) has a recall of \(r=0.946\). A lattice based attack, where the 4 most significant bits of the ephemeral key are leaked, requires about 80 signature generations of a 256-bit key. The total number of signatures required in our scenario for a successful attack is then $$\frac{16}{r}\cdot\frac{80}{p^{80}}\approx 82000$$
 
-For a 7-bit classifier with a precision of \(p=0.95\) and recall of \(r\approx0.4\) one can estimate \[\frac{128}{r}\cdot\frac{50}{p^{50}}\approx200000\]
+For a 7-bit classifier with a precision of \(p=0.95\) and recall of \(r\approx0.4\) one can estimate $$\frac{128}{r}\cdot\frac{50}{p^{50}}\approx200000$$
 
 signature generations, where the lattice attack then requires a dimension of about 50.
 
