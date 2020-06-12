@@ -3,13 +3,13 @@ layout: default
 title: Information Leakage of EC-Nonces of a Solo Security Key
 ---
 
-Author: **Matthias Vögeler**\
-<matthias.voegeler@hshl.de>\
+Author: **Matthias Vögeler**\\
+<matthias.voegeler@hshl.de>\\
 Date: June, 2020
 
 # Preliminary Remarks
-The following findings have been filed to [Solokeys](https://solokeys.com/) in January 2020 and have been accepted.\
-Up to now, the issue that is located in an [external library](https://github.com/kmackay/micro-ecc) has not been solved. The associated repository is inactive for a couple of years.\
+The following findings have been filed to [Solokeys](https://solokeys.com/) in January 2020 and have been accepted.\\
+Up to now, the issue that is located in an [external library](https://github.com/kmackay/micro-ecc) has not been solved. The associated repository is inactive for a couple of years.\\
 However, the Solo that has been analyzed here, has an [FIDO Authenticator Certification Level](https://fidoalliance.org/certification/authenticator-certification-levels/) of 1, which means *better than passwords*. To my opinion, this statement is not affected by these findings.
 
 # Abstract
